@@ -1,7 +1,7 @@
-import express from "express";
-import { exec } from "yt-dlp-exec";
-import path from "path";
-import fs from "fs";
+const express = require("express");
+const { exec } = require("yt-dlp-exec");
+const path = require("path");
+const fs = require("fs");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -20,12 +20,13 @@ app.get("/download", async (req, res) => {
   try {
     await exec(url, { output: filePattern });
     const files = fs.readdirSync(outputDir);
-    const latest = files.sort((a, b) =>
-      fs.statSync(path.join(outputDir, b)).mtimeMs -
-      fs.statSync(path.join(outputDir, a)).mtimeMs
+    const latest = files.sort(
+      (a, b) =>
+        fs.statSync(path.join(outputDir, b)).mtimeMs -
+        fs.statSync(path.join(outputDir, a)).mtimeMs
     )[0];
 
-    res.download(path.join(outputDir, latest)); // send file to client
+    res.download(path.join(outputDir, latest)); // send file
   } catch (err) {
     console.error(err);
     res.status(500).send("Download failed");
@@ -33,4 +34,5 @@ app.get("/download", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running
+  console.log(`🚀 Server running at http://localhost:${PORT}`);
+});
