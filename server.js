@@ -26,7 +26,7 @@ app.get("/download", async (req, res) => {
         fs.statSync(path.join(outputDir, a)).mtimeMs
     )[0];
 
-    res.download(path.join(outputDir, latest)); // send file
+    res.download(path.join(outputDir, latest));
   } catch (err) {
     console.error(err);
     res.status(500).send("Download failed");
