@@ -20,6 +20,11 @@ YTDlpWrap.downloadFromGithub(ytDlpPath)
   .then(() => console.log("✅ yt-dlp binary ready"))
   .catch(err => console.error("❌ Failed to download yt-dlp:", err));
 
+  // 🔹 Health API
+app.get("/health", (req, res) => {
+    res.status(200).json({ status: "ok", uptime: process.uptime() });
+});
+
 app.get("/download", async (req, res) => {
   const url = req.query.url;
   if (!url) return res.status(400).send("Missing ?url=");
