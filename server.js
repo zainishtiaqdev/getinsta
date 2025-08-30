@@ -1,21 +1,29 @@
 const express = require("express");
 const YTDlpWrap = require("yt-dlp-wrap").default;
-const ytDlpStatic = require("yt-dlp-static");
 const path = require("path");
 const fs = require("fs");
 
 const app = express();
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3000;
 
 const outputDir = path.resolve("./downloads");
 if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir);
 
-// Use standalone binary from yt-dlp-static
-const ytDlpPath = ytDlpStatic;
+const ytDlpPath = path.join(__dirname, "yt-dlp");
 const ytDlpWrap = new YTDlpWrap(ytDlpPath);
 
-// Binary is always ready
-let ytDlpReady = true;
+// Flag to track if yt-dlp is ready
+let ytDlpReady = false;
+
+// Download standalone yt-dlp binary automatically
+YTDlpWrap.downloadFromGithub(ytDlpPath)
+  .then(() => {
+    console.log("✅ yt-dlp binary ready");
+    ytDlpReady = true;
+  })
+  .catch((err) => {
+    console.error("❌ Failed to download yt-dlp:", err);
+  });
 
 // 🔹 Health API
 app.get("/health", (req, res) => {
@@ -32,7 +40,7 @@ app.get("/download", async (req, res) => {
       .status(503)
       .send("yt-dlp binary is not ready yet. Try again in a few seconds.");
 
-  const filePattern = path.join(outputDir, "%(title)s.%(ext)s");
+  const filePattern = `${outputDir}/%(title)s.%(ext)s`;
 
   try {
     await ytDlpWrap.execPromise([url, "-o", filePattern]);
@@ -47,11 +55,7 @@ app.get("/download", async (req, res) => {
     res.download(path.join(outputDir, latest));
   } catch (err) {
     console.error("❌ Download failed:", err);
-    res
-      .status(500)
-      .send(
-        "Download failed. Make sure the URL is public and accessible without login."
-      );
+    res.status(500).send("Download failed");
   }
 });
 
