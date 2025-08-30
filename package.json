@@ -13,7 +13,7 @@
   "dependencies": {
     "dotenv": "^16.4.5",
     "express": "^4.21.2",
-    "yt-dlp-bin": "^2025.2.19",
+    "yt-dlp-wrap": "^2.3.12",
     "execa": "^9.5.2"
   },
   "devDependencies": {

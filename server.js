@@ -1,5 +1,5 @@
 const express = require("express");
-const { exec } = require("yt-dlp-exec");
+const YTDlpWrap = require("yt-dlp-wrap").default; // import the class
 const path = require("path");
 const fs = require("fs");
 
@@ -11,6 +11,15 @@ if (!fs.existsSync(outputDir)) {
   fs.mkdirSync(outputDir);
 }
 
+// Create an instance and point to a binary path
+const ytDlpPath = path.join(__dirname, "yt-dlp"); // or "bin/yt-dlp" if you ship it yourself
+const ytDlpWrap = new YTDlpWrap(ytDlpPath);
+
+// Download binary automatically if missing
+YTDlpWrap.downloadFromGithub(ytDlpPath)
+  .then(() => console.log("✅ yt-dlp binary ready"))
+  .catch(err => console.error("❌ Failed to download yt-dlp:", err));
+
 app.get("/download", async (req, res) => {
   const url = req.query.url;
   if (!url) return res.status(400).send("Missing ?url=");
@@ -18,7 +27,8 @@ app.get("/download", async (req, res) => {
   const filePattern = `${outputDir}/%(title)s.%(ext)s`;
 
   try {
-    await exec(url, { output: filePattern });
+    await ytDlpWrap.execPromise([url, "-o", filePattern]);
+
     const files = fs.readdirSync(outputDir);
     const latest = files.sort(
       (a, b) =>
@@ -28,7 +38,7 @@ app.get("/download", async (req, res) => {
 
     res.download(path.join(outputDir, latest));
   } catch (err) {
-    console.error(err);
+    console.error("❌ Download failed:", err);
     res.status(500).send("Download failed");
   }
 });
